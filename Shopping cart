@@ -1,0 +1,118 @@
+const { addItem, removeItem, getTotalItems } = require('../cart');
+
+describe('addItem', () => {
+  test('Positive: adds a new item with a valid name and quantity', () => {
+    const cart = [];
+    addItem(cart, 'apple', 3);
+    expect(cart).toEqual([{ item: 'apple', quantity: 3 }]);
+  });
+
+  test('Positive: increases quantity when adding an item that already exists', () => {
+    const cart = [{ item: 'apple', quantity: 2 }];
+    addItem(cart, 'apple', 3);
+    expect(cart).toEqual([{ item: 'apple', quantity: 5 }]);
+  });
+
+  test('Negative: adding an item with a negative quantity does not modify the cart', () => {
+    const cart = [];
+    addItem(cart, 'apple', -5);
+    expect(cart).toEqual([]);
+  });
+
+  test('Negative: throws when cart is not an array', () => {
+    expect(() => addItem(null, 'apple', 1)).toThrow(TypeError);
+  });
+
+  test('Negative: throws when item name is not a valid string', () => {
+    const cart = [];
+    expect(() => addItem(cart, '', 1)).toThrow(TypeError);
+    expect(() => addItem(cart, 123, 1)).toThrow(TypeError);
+  });
+
+  test('Edge Case: adding an item with a quantity of 0 does not create an entry', () => {
+    const cart = [];
+    addItem(cart, 'apple', 0);
+    expect(cart).toEqual([]);
+  });
+
+  test('Edge Case: adding a quantity of 0 to an already-existing item leaves quantity unchanged', () => {
+    const cart = [{ item: 'apple', quantity: 4 }];
+    addItem(cart, 'apple', 0);
+    expect(cart).toEqual([{ item: 'apple', quantity: 4 }]);
+  });
+});
+
+describe('removeItem', () => {
+  test('Positive: removes an existing item from the cart', () => {
+    const cart = [
+      { item: 'apple', quantity: 3 },
+      { item: 'banana', quantity: 2 },
+    ];
+    removeItem(cart, 'apple');
+    expect(cart).toEqual([{ item: 'banana', quantity: 2 }]);
+  });
+
+  test('Negative: attempting to remove an item not in the cart leaves the cart unchanged', () => {
+    const cart = [{ item: 'apple', quantity: 3 }];
+    removeItem(cart, 'banana');
+    expect(cart).toEqual([{ item: 'apple', quantity: 3 }]);
+  });
+
+  test('Negative: throws when cart is not an array', () => {
+    expect(() => removeItem(undefined, 'apple')).toThrow(TypeError);
+  });
+
+  test('Edge Case: removing the last item from the cart results in an empty cart', () => {
+    const cart = [{ item: 'apple', quantity: 1 }];
+    removeItem(cart, 'apple');
+    expect(cart).toEqual([]);
+  });
+
+  test('Edge Case: removing from an already-empty cart does nothing and does not throw', () => {
+    const cart = [];
+    expect(() => removeItem(cart, 'apple')).not.toThrow();
+    expect(cart).toEqual([]);
+  });
+});
+
+describe('getTotalItems', () => {
+  test('Positive: calculates the total number of items correctly', () => {
+    const cart = [
+      { item: 'apple', quantity: 3 },
+      { item: 'banana', quantity: 2 },
+      { item: 'cherry', quantity: 5 },
+    ];
+    expect(getTotalItems(cart)).toBe(10);
+  });
+
+  test('Negative: handles an empty cart by returning 0', () => {
+    expect(getTotalItems([])).toBe(0);
+  });
+
+  test('Negative: throws when cart is not an array', () => {
+    expect(() => getTotalItems('not-a-cart')).toThrow(TypeError);
+  });
+
+  test('Edge Case: calculates correctly with very large quantities', () => {
+    const cart = [
+      { item: 'apple', quantity: 1000000 },
+      { item: 'banana', quantity: 999999999 },
+    ];
+    expect(getTotalItems(cart)).toBe(1000999999);
+  });
+});
+
+describe('integration: addItem, removeItem, and getTotalItems together', () => {
+  test('reflects total correctly across a sequence of operations', () => {
+    const cart = [];
+    addItem(cart, 'apple', 3);
+    addItem(cart, 'banana', 2);
+    expect(getTotalItems(cart)).toBe(5);
+
+    removeItem(cart, 'apple');
+    expect(getTotalItems(cart)).toBe(2);
+
+    addItem(cart, 'banana', 4);
+    expect(getTotalItems(cart)).toBe(6);
+  });
+});
