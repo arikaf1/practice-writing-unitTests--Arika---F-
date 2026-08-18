@@ -1,0 +1,98 @@
+/**
+ * Basic Shopping Cart Module
+ *
+ * A "cart" is represented as an array of items:
+ *   [{ item: 'apple', quantity: 3 }, { item: 'banana', quantity: 1 }, ...]
+ *
+ * All methods return the cart (or a value) rather than relying on
+ * hidden/global state, which makes them easy to test in isolation.
+ */
+
+/**
+ * Adds an item to the cart. If the item already exists in the cart,
+ * its quantity is increased instead of creating a duplicate entry.
+ *
+ * @param {Array} cart - The cart array.
+ * @param {string} item - The name of the item to add.
+ * @param {number} quantity - The quantity to add. Must be a positive integer.
+ * @returns {Array} The updated cart.
+ * @throws {TypeError} If cart is not an array or item is not a non-empty string.
+ */
+function addItem(cart, item, quantity) {
+  if (!Array.isArray(cart)) {
+    throw new TypeError('cart must be an array');
+  }
+  if (typeof item !== 'string' || item.trim() === '') {
+    throw new TypeError('item must be a non-empty string');
+  }
+  if (typeof quantity !== 'number' || Number.isNaN(quantity) || !Number.isFinite(quantity)) {
+    throw new TypeError('quantity must be a valid number');
+  }
+
+  // Negative quantities are invalid - reject gracefully by not modifying the cart.
+  if (quantity < 0) {
+    return cart;
+  }
+
+  // A quantity of 0 is a valid edge case, but adds nothing meaningful to the cart.
+  // We still allow it, matching "adding zero of an item" being a no-op that
+  // doesn't error, but also doesn't create a phantom entry unless one already exists.
+  const existing = cart.find((entry) => entry.item === item);
+
+  if (existing) {
+    existing.quantity += quantity;
+  } else if (quantity > 0) {
+    cart.push({ item, quantity });
+  }
+  // if quantity === 0 and item doesn't exist yet, do nothing (nothing to add)
+
+  return cart;
+}
+
+/**
+ * Removes an item entirely from the cart.
+ *
+ * @param {Array} cart - The cart array.
+ * @param {string} item - The name of the item to remove.
+ * @returns {Array} The updated cart.
+ * @throws {TypeError} If cart is not an array.
+ */
+function removeItem(cart, item) {
+  if (!Array.isArray(cart)) {
+    throw new TypeError('cart must be an array');
+  }
+  if (typeof item !== 'string' || item.trim() === '') {
+    throw new TypeError('item must be a non-empty string');
+  }
+
+  const index = cart.findIndex((entry) => entry.item === item);
+
+  // If the item isn't found, do nothing and return the cart unchanged (graceful handling).
+  if (index === -1) {
+    return cart;
+  }
+
+  cart.splice(index, 1);
+  return cart;
+}
+
+/**
+ * Returns the total number of items (sum of quantities) in the cart.
+ *
+ * @param {Array} cart - The cart array.
+ * @returns {number} The total quantity of all items in the cart.
+ * @throws {TypeError} If cart is not an array.
+ */
+function getTotalItems(cart) {
+  if (!Array.isArray(cart)) {
+    throw new TypeError('cart must be an array');
+  }
+
+  return cart.reduce((total, entry) => total + entry.quantity, 0);
+}
+
+module.exports = {
+  addItem,
+  removeItem,
+  getTotalItems,
+};
